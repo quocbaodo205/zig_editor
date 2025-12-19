@@ -36,8 +36,9 @@ pub fn editorDrawRow(writer: *std.Io.Writer) !void {
 pub fn editorRefreshScreen(writer: *std.Io.Writer) !void {
     try writer.print("\x1b[?25l", .{}); // Hide the cursor
     // try writer.print("\x1b[2J", .{}); // Clear full screen, not use since not optimal
-    try writer.print("\x1b[H", .{}); // Move top left
-    try editorDrawRow(writer);
     try writer.print("\x1b[H", .{}); // Move top left again
+    try editorDrawRow(writer);
+    // Terminal use 1-index so convert 0-index to 1
+    try writer.print("\x1b[{};{}H", .{ term.E.cy + 1, term.E.cx + 1 }); // Move to cursor position
     try writer.print("\x1b[?25h", .{}); // Show cursor
 }

@@ -4,8 +4,13 @@ const posix = std.posix;
 const linux = std.os.linux;
 
 pub const EditorConfig = struct {
+    // Cursor
+    cx: u16,
+    cy: u16,
+    // Screen
     screen_row: u16,
     screen_col: u16,
+    // Original terminal to return upon exit
     orig_term: std.posix.termios,
 };
 
@@ -44,6 +49,8 @@ pub fn getWindowsSize(e: *EditorConfig) void {
 
 pub fn initEditor() void {
     E = EditorConfig{
+        .cx = 0,
+        .cy = 0,
         .orig_term = undefined,
         .screen_col = 0,
         .screen_row = 0,

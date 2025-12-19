@@ -41,12 +41,13 @@ pub fn mainLoop() !void {
             // Timeout waiting, can do something rendering here?
         } else {
             // Render something
+            t_input.editorMoveCursor(c);
             try screen.editorRefreshScreen(writer);
-            if (std.ascii.isControl(c)) {
-                try writer.print("{}\r\n", .{c});
-            } else {
-                try writer.print("{} ('{c}')\r\n", .{ c, c });
-            }
+            // if (std.ascii.isControl(c)) {
+            //     try writer.print("{}\r\n", .{c});
+            // } else {
+            //     try writer.print("{} ('{c}')\r\n", .{ c, c });
+            // }
             try writer.flush(); // Only flush once for every render.
         }
     }
