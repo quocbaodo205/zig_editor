@@ -4,7 +4,7 @@ const screen = @import("screen.zig");
 const t_input = @import("input.zig");
 
 // ====================== Global var ===============================
-// Deinit in main to avoid leak
+// Deinit in main to avoid leak. Also use stack-based fix buffer anyway...
 
 const timeout_ns = 3 * std.time.ns_per_s; // 3 seconds timeout
 
@@ -12,10 +12,11 @@ var stdout_buffer: [1024]u8 = undefined;
 var stdout_writer = std.fs.File.stdout().writer(&stdout_buffer);
 const writer = &stdout_writer.interface;
 
-var buffer: [10000]u8 = undefined;
-var fba = std.heap.FixedBufferAllocator.init(&buffer);
+var alloc_buffer: [20000000]u8 = undefined; // Buffer for all allocation, including IO
+var fba = std.heap.FixedBufferAllocator.init(&alloc_buffer);
 var arena = std.heap.ArenaAllocator.init(fba.allocator());
 const allocator = arena.allocator();
+
 var poller = std.Io.poll(
     allocator,
     enum { stdin },
@@ -54,9 +55,17 @@ pub fn mainLoop() !void {
 }
 
 pub fn main() !void {
+    // TODO: Support dealloc and lojj config set --user ui.default-command logcal area. Probably one area for each file.
     try term.enableRawmode();
     defer term.exitRawmode();
-    term.initEditor();
+    // TODO: Defer clear screen.
+    try term.initEditor(allocator);
+    // TODO: Need a function for argv parsing.
+    if (std.os.argv.len > 1) {
+        // https://zig.guide/language-basics/sentinel-termination/
+        // Probably don't need to care.
+        try term.editorOpen(allocator, std.mem.span(std.os.argv[1]));
+    }
     try mainLoop();
     defer arena.deinit();
     defer poller.deinit();

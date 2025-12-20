@@ -3,29 +3,39 @@ const std = @import("std");
 const term = @import("terminal.zig");
 
 pub fn editorDrawRow(writer: *std.Io.Writer) !void {
-    for (0..term.E.screen_row) |i| {
-        if (i == term.E.screen_row / 3) {
-            // Print special hello message
-            var st = try std.fmt.allocPrint(std.heap.page_allocator, "Kilo editor -- version {s}", .{"0.0.1"});
-            if (st.len > term.E.screen_col) {
-                st = st[0..term.E.screen_col];
-            }
-            // Padding with space and ~
-            var padding = (term.E.screen_col - st.len) / 2;
-            if (padding > 0) {
+    for (0..term.E.screen_row) |y| {
+        if (y >= term.E.num_rows) {
+            // Print some beautiful things.
+            if (term.E.num_rows == 0 and y == term.E.screen_row / 3) {
+                // Print special hello message
+                var st = try std.fmt.allocPrint(std.heap.page_allocator, "Kilo editor -- version {s}", .{"0.0.1"});
+                if (st.len > term.E.screen_col) {
+                    st = st[0..term.E.screen_col];
+                }
+                // Padding with space and ~
+                var padding = (term.E.screen_col - st.len) / 2;
+                if (padding > 0) {
+                    try writer.print("~", .{});
+                    padding -= 1;
+                }
+                // Still fine since it's not flushed
+                for (0..padding) |_| {
+                    try writer.print(" ", .{});
+                }
+                try writer.print("{s}", .{st});
+            } else {
                 try writer.print("~", .{});
-                padding -= 1;
             }
-            // Still fine since it's not flushed
-            for (0..padding) |_| {
-                try writer.print(" ", .{});
-            }
-            try writer.print("{s}", .{st});
         } else {
-            try writer.print("~", .{});
+            if (term.E.col_offset < term.E.rows.items[y + term.E.row_offset].chars.len) {
+                // Print the editor lines
+                try writer.print("{s}", .{term.E.rows.items[y + term.E.row_offset].chars[term.E.col_offset..]});
+            } else {
+                // try writer.print("", .{}); // Nothing to do here
+            }
         }
         try writer.print("\x1b[K", .{}); // Clear this line
-        if (i < term.E.screen_row - 1) {
+        if (y < term.E.screen_row - 1) {
             try writer.print("\r\n", .{}); // Don't \r\n the last line to not scroll
         }
     }

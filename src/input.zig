@@ -116,21 +116,40 @@ pub fn editorMoveCursor(c: u16) void {
         @intFromEnum(editorKey.ArrowUp) => {
             if (term.E.cy > 0) {
                 term.E.cy -= 1;
+            } else {
+                // Allow scrolling
+                if (term.E.row_offset > 0) {
+                    term.E.row_offset -= 1;
+                }
             }
         },
         @intFromEnum(editorKey.ArrowDown) => {
             if (term.E.cy < term.E.screen_row - 1) {
                 term.E.cy += 1;
+            } else {
+                // Allow scrolling
+                if (term.E.row_offset + term.E.cy + 1 < term.E.num_rows) {
+                    term.E.row_offset += 1;
+                }
             }
         },
         @intFromEnum(editorKey.ArrowLeft) => {
             if (term.E.cx > 0) {
                 term.E.cx -= 1;
+            } else {
+                // Allow scrolling
+                if (term.E.col_offset > 0) {
+                    term.E.col_offset -= 1;
+                }
             }
         },
         @intFromEnum(editorKey.ArrowRight) => {
             if (term.E.cx < term.E.screen_col - 1) {
                 term.E.cx += 1;
+            } else {
+                // Allow scrolling
+                // TODO: Currently scroll to inf lol
+                term.E.col_offset += 1;
             }
         },
         else => {},
